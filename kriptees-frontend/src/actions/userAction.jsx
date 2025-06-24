@@ -40,7 +40,7 @@ import {
 import { toast } from "react-toastify";
 
 // const token = localStorage.getItem('token');
-import { getAccessToken, setAccessToken } from "../utils/auth";
+import { getAccessToken, setAccessToken, removeAccessToken } from "../utils/auth";
 import { isTokenExpired } from "../utils/checkTokenExpiry";
 
 // login user
@@ -104,39 +104,64 @@ export function signUp(signupData) {
 
 // Load User (user Profile) if logged in before
 export const load_UserProfile = () => async (dispatch) => {
-  try {
-    dispatch({ type: LOAD_USER_REQUEST });
+  dispatch({ type: LOAD_USER_REQUEST });
+  let token = getAccessToken();
 
-    let token = getAccessToken();
-
-    // ✅ Try to refresh token if expired
-    if (!token || isTokenExpired()) {
-      const { data } = await axios.post(
-        "http://localhost:5000/api/v1/refresh",
-        {},
-        { withCredentials: true }
-      );
-      setAccessToken(data.accessToken);
-      token = data.accessToken;
-    }
-
-    const config = {
-      headers: { Authorization: `Bearer ${token}` },
-      withCredentials: true,
-    };
-
-    const userData = sessionStorage.getItem("user");
-
-    if (userData && userData !== "undefined") {
-      dispatch({ type: LOAD_USER_SUCCESS, payload: JSON.parse(userData) });
-    } else {
+  // Step A: Check In-Memory Token
+  if (token && !isTokenExpired(token)) {
+    // Token exists in memory and is not expired
+    try {
+      // Optionally, verify by fetching profile, or trust sessionStorage if populated by login/signup
+      const cachedUserData = sessionStorage.getItem("user");
+      if (cachedUserData && cachedUserData !== "undefined") {
+        dispatch({ type: LOAD_USER_SUCCESS, payload: JSON.parse(cachedUserData) });
+        return;
+      }
+      // If no session storage, fetch profile with existing token
+      const config = { headers: { Authorization: `Bearer ${token}` }, withCredentials: true };
       const { data } = await axios.get("http://localhost:5000/api/v1/profile", config);
       sessionStorage.setItem("user", JSON.stringify(data.user));
       dispatch({ type: LOAD_USER_SUCCESS, payload: data.user });
+      return;
+    } catch (error) {
+      // Token might be invalid on the server despite not being expired locally
+      // Proceed to refresh
+      // console.warn("In-memory token failed validation, proceeding to refresh.", error);
+      token = null; // Force refresh
     }
+  }
 
+  // Step B: Attempt Token Refresh (if no token, or in-memory token was expired or failed validation)
+  try {
+    // console.log("Attempting token refresh...");
+    const { data: refreshData } = await axios.post(
+      "http://localhost:5000/api/v1/refresh",
+      {},
+      { withCredentials: true } // Sends the HttpOnly refresh token cookie
+    );
+
+    if (refreshData.success && refreshData.accessToken) {
+      setAccessToken(refreshData.accessToken);
+      // console.log("Token refreshed successfully. Fetching user profile...");
+
+      // Fetch user profile with the new access token
+      const config = { headers: { Authorization: `Bearer ${refreshData.accessToken}` }, withCredentials: true };
+      const { data: userProfileData } = await axios.get("http://localhost:5000/api/v1/profile", config);
+
+      sessionStorage.setItem("user", JSON.stringify(userProfileData.user));
+      dispatch({ type: LOAD_USER_SUCCESS, payload: userProfileData.user });
+    } else {
+      // Refresh failed to return an accessToken
+      // console.log("Refresh was successful but no access token in response or success false.");
+      removeAccessToken();
+      sessionStorage.removeItem("user");
+      dispatch({ type: LOAD_USER_FAIL, payload: "Failed to refresh session." });
+    }
   } catch (error) {
-    dispatch({ type: LOAD_USER_FAIL, payload: error.message });
+    // console.error("Token refresh failed:", error.response ? error.response.data.message : error.message);
+    removeAccessToken();
+    sessionStorage.removeItem("user");
+    dispatch({ type: LOAD_USER_FAIL, payload: error.response?.data?.message || "Session expired. Please log in again." });
   }
 };
 
@@ -144,11 +169,17 @@ export const load_UserProfile = () => async (dispatch) => {
 export function logout() {
   return async function (dispatch) {
     try {
-      sessionStorage.removeItem("user");
       await axios.get("http://localhost:5000/api/v1/logout", { withCredentials: true });
+      removeAccessToken(); // Clear in-memory access token
+      sessionStorage.removeItem("user"); // Clear user data from session storage
       dispatch({ type: LOGOUT_SUCCESS });
+      toast.success("Logged out successfully!");
     } catch (error) {
+      // Even if logout API call fails, still clear client-side session
+      removeAccessToken();
+      sessionStorage.removeItem("user");
       dispatch({ type: LOGOUT_FAIL, payload: error.message });
+      toast.error("Logout failed. Cleared local session.");
     }
   };
 }

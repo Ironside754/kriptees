@@ -12,16 +12,8 @@ const sendJWtToken = (user, statusCode, res) => {
     maxAge: process.env.COOKIE_EXPIRE * 24 * 60 * 60 * 1000, // days to ms
   });
 
-  // Send Access Token in HttpOnly Cookie
-  res.cookie("accessToken", accessToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/", // allow across the app
-    maxAge: 15 * 60 * 1000, // 15 minutes
-  });
-
-  // Send user and accessToken (optional) in response body for Redux
+  // Send user and accessToken in the response body for Redux
+  // Access token is NOT sent as a cookie
   res.status(statusCode).json({
     success: true,
     accessToken,

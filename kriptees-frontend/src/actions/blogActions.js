@@ -18,6 +18,7 @@ import {
   CLEAR_BLOG_ERRORS,
   CLEAR_BLOG_MESSAGE,
 } from "../constants/blogConstants";
+import { getAccessToken } from "../utils/auth"; // Corrected import
 
 const API_BASE = "http://localhost:5000/api/v1";
 
@@ -26,11 +27,10 @@ export const createBlogPost = (postData) => async (dispatch) => {
   try {
     dispatch({ type: CREATE_BLOG_POST_REQUEST });
 
-    const token = localStorage.getItem("token");
     const config = {
       headers: {
         "Content-Type": "application/json",
-        Authorization: token, 
+        Authorization: `Bearer ${getAccessToken()}`,
       },
       withCredentials: true,
     };
@@ -96,11 +96,10 @@ export const updateBlogPost = (postId, postData) => async (dispatch) => {
   try {
     dispatch({ type: UPDATE_BLOG_POST_REQUEST });
 
-    const token = localStorage.getItem("token");
     const config = {
       headers: {
         "Content-Type": "application/json",
-        Authorization: token,
+        Authorization: `Bearer ${getAccessToken()}`,
       },
       withCredentials: true,
     };
@@ -124,10 +123,9 @@ export const deleteBlogPost = (postId) => async (dispatch) => {
   try {
     dispatch({ type: DELETE_BLOG_POST_REQUEST });
 
-    const token = localStorage.getItem("token");
     const config = {
       headers: {
-        Authorization: token,
+        Authorization: `Bearer ${getAccessToken()}`,
       },
       withCredentials: true,
     };
