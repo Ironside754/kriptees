@@ -7,3 +7,7 @@ export function setAccessToken(token) {
 export function getAccessToken() {
   return accessToken;
 }
+
+export function removeAccessToken() {
+  accessToken = ""; // Or set to null, depending on preference
+}
