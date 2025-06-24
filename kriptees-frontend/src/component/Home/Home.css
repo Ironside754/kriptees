@@ -1,0 +1,134 @@
+.trending_heading {
+  text-align: center;
+  margin-top: 2.7rem;
+  margin-bottom: 20px;
+  font-weight: 400;
+  font-family: "Roboto", sans-serif;
+}
+
+
+.trending-products {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  /* gap: 1.8rem; */
+  /* margin: 0 1.8rem; */
+}
+
+.swiper {
+  /* width: 100vw; */
+  height: 60vh;
+}
+
+.swiper-slide {
+  text-align: center;
+  font-size: 18px;
+  background: #fff;
+
+  /* Center slide text vertically */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.swiper-slide img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.vibe {
+  /* height: 4rem; */
+  margin-top: -3px;
+  padding-top: 1rem;
+  text-align: center;
+  font-family: "Roboto", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+  background-color: #11A3CA;
+  color: white;
+}
+
+.boxes {
+  background-color: #F3F1DA;
+  color: black;
+  border-radius: 5px;
+  padding: 10px;
+  margin: 15px;
+}
+
+@media only screen and (min-width: 600px) {
+  .trending-products {
+    max-width: 960px;
+    margin: 0 auto;
+  }
+}
+
+@media only screen and (min-width: 960px) {
+  .trending-products {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+}
+
+@media only screen and (min-width: 1200px) {
+  .trending-products {
+    max-width: 1440px;
+    margin: 0 auto;
+  }
+}
+
+/* The parent container that hides overflow */
+.marquee-container {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  /* white-space: nowrap;  // Not needed if we use flex for .marquee-content */
+}
+
+/* The content is twice as wide as the container for a seamless loop */
+.marquee-content {
+  display: flex;
+  width: 200%; /* Double the container width */
+  animation: marquee 10s linear infinite; /* Adjust 10s for speed */
+}
+
+/* Each half is 50% so text repeats seamlessly */
+.marquee-group {
+  width: 50%;
+  white-space: nowrap; /* Keep text in a single line */
+}
+
+/* Keyframes: move left from 0% to -50% */
+@keyframes marquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+/* In your CSS file or a Tailwind plugin */
+.text-outline {
+  color: black;
+  text-shadow:
+    -1px 0 black,
+    0 1px black,
+    1px 0 black,
+    0 -1px black;
+}
+@keyframes slideLeft {
+  0% {
+    opacity: 0;
+    transform: translateX(-80px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slideLeft {
+  animation: slideLeft 0.7s ease forwards;
+}
